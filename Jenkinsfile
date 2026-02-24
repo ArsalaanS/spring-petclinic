@@ -5,40 +5,25 @@ pipeline {
         cron('H/5 * * * *')
     }
 
-    tools {
-        maven 'Maven3'
-    }
-
     stages {
 
-        stage('Checkout') {
+        stage('Build, Test & Coverage') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/ArsalaanS/spring-petclinic.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'mvn clean package'
-            }
-        }
-
-        stage('Test & Coverage') {
-            steps {
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    jacoco execPattern: 'target/jacoco.exec',
-                           classPattern: 'target/classes',
-                           sourcePattern: 'src/main/java'
-                }
+                sh 'chmod +x mvnw'
+                sh './mvnw clean verify'
             }
         }
     }
 
     post {
+        always {
+            jacoco(
+                execPattern: 'target/jacoco.exec',
+                classPattern: 'target/classes',
+                sourcePattern: 'src/main/java'
+            )
+        }
+
         success {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
